@@ -1,20 +1,30 @@
-﻿using MediatR;
-
-namespace Catalog.Api.Products.CreateProduct
+﻿namespace Catalog.Api.Products.CreateProduct
 {
   public record CreateProductCommand(string Name, List<string> Category, 
     string Description, string ImageFile, decimal Price)
-    : IRequest<CreateProductResult>;
+    : ICommand<CreateProductResult>;
 
-  public record CreateProductResult(Guid id);
-  internal class CreateProductCommandHandler : 
-    IRequestHandler<CreateProductCommand, CreateProductResult>
+  public record CreateProductResult(Guid Id);
+  internal class CreateProductCommandHandler(IDocumentSession session) : 
+    ICommandHandler<CreateProductCommand, CreateProductResult>
   {
-    public Task<CreateProductResult> Handle(CreateProductCommand request, 
+    public async Task<CreateProductResult> Handle(CreateProductCommand command, 
       CancellationToken cancellationToken)
     {
-      //Business logic to create a product.
-      throw new NotImplementedException();
+      //create product entity from command object
+      var product = new Product { 
+        Name = command.Name, 
+        Category = command.Category,
+        Description = command.Description, 
+        ImageFile = command.ImageFile,
+        Price = command.Price,
+      };
+
+      session.Store(product);
+      await session.SaveChangesAsync(cancellationToken);
+
+      //return CreateProductResult result
+      return new CreateProductResult(product.Id);
     }
   }
 }
