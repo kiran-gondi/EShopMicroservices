@@ -1,5 +1,9 @@
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+
 var builder = WebApplication.CreateBuilder(args);
 var assembly = typeof(Program).Assembly;
+var postgresDBConnectionString = builder.Configuration.GetConnectionString("Database")!;
 
 //Add services to the container.
 builder.Services.AddMediatR(config =>
@@ -14,7 +18,7 @@ builder.Services.AddCarter();
 
 builder.Services.AddMarten(opts =>
 {
-  opts.Connection(builder.Configuration.GetConnectionString("Database")!);
+  opts.Connection(postgresDBConnectionString);
 }).UseLightweightSessions();
 
 if (builder.Environment.IsDevelopment())
@@ -22,10 +26,18 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
+builder.Services.AddHealthChecks()
+                .AddNpgSql(postgresDBConnectionString);
 
 var app = builder.Build();
 
 //Configure the HTTP request pipeline.
 app.MapCarter();
 app.UseExceptionHandler(options => { });
+
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+  ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
 app.Run();
