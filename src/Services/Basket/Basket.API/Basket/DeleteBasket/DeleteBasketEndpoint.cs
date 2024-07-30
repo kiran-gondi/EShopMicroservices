@@ -20,6 +20,6 @@ public class DeleteBasketEndpoint : ICarterModule
       .Produces<StoreBasketResponse>(StatusCodes.Status200OK)
       .ProducesProblem(StatusCodes.Status400BadRequest)
       .WithSummary("Delete Basket By UserName")
-      .WithDescription("Delete Basket By UserName"); ;
+      .WithDescription("Delete Basket By UserName");
   }
 }
